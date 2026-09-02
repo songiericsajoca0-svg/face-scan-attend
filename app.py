@@ -848,13 +848,19 @@ def app_error_page(status: int, title: str, message: str) -> HttpResponse:
 
 
 def authorize_and_prepare(request: Request) -> HttpResponse | None:
+    """Prepare the request without browser Basic Authentication.
+
+    The application is intentionally opened directly in the browser. MongoDB
+    credentials remain server-side in environment variables and are never sent
+    to the browser.
+    """
     if request.path.startswith("/static/"):
         return None
 
     cloud = is_vercel_deployment()
-
+    # APP_ACCESS_PASSWORD / APP_ACCESS_USERNAME are no longer required for
+    # browser access. Only MongoDB configuration is required to start.
     missing = mongodb_configuration_missing(include_cloud_security=False)
-
     if missing:
         return setup_page(missing, cloud)
 
