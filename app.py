@@ -850,21 +850,19 @@ def app_error_page(status: int, title: str, message: str) -> HttpResponse:
 def authorize_and_prepare(request: Request) -> HttpResponse | None:
     if request.path.startswith("/static/"):
         return None
+
     cloud = is_vercel_deployment()
-    missing = mongodb_configuration_missing(include_cloud_security=cloud)
+
+    missing = mongodb_configuration_missing(include_cloud_security=False)
+
     if missing:
         return setup_page(missing, cloud)
-    if cloud and not basic_authorized(request):
-        return HttpResponse(
-            401,
-            b"Authentication is required to access this attendance system.",
-            "text/plain; charset=utf-8",
-            [("WWW-Authenticate", 'Basic realm="School Attendance", charset="UTF-8"')],
-        )
+
     try:
         initialize_mongodb()
     except MongoDatabaseError:
         return database_error_page()
+
     return None
 
 
